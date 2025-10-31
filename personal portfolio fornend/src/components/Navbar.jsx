@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 const Navbar = () => { 
     const [active, setActive] =useState(false);
@@ -40,6 +41,9 @@ const Navbar = () => {
   </li>
   <li>
     <a href="#kontak" className="sm:text-lg text-base font-medium">Contact</a>
+  </li>
+  <li>
+    <Link to="/admin" className="sm:text-lg text-base font-medium text-violet-400 hover:text-violet-300">Admin</Link>
   </li>
 
 </ul>

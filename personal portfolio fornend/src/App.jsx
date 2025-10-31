@@ -1,10 +1,88 @@
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import DataImage from "./data";
-import { listTools, listProyek } from "./data";
+import { listTools } from "./data";
+import AdminLogin from "./components/AdminLogin";
+import AdminDashboard from "./components/AdminDashboard";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 
 function App() {
   return (
-    <>
-    <div className="hero grid md:grid-cols-2 items-center pt-10 xl:gap-0 gap-6 grid-cols-1">
+    <Router>
+      <Routes>
+        {/* Admin Routes */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route 
+          path="/admin/dashboard" 
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+        
+        {/* Main Portfolio Route */}
+        <Route path="/" element={<PortfolioMain />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
+  );
+}
+
+function PortfolioMain() {
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Helper function to safely parse tools
+  const parseTools = (tools) => {
+    if (!tools) return [];
+    if (Array.isArray(tools)) return tools;
+    if (typeof tools === 'string') {
+      return tools.split(',').map(t => t.trim()).filter(t => t);
+    }
+    return [];
+  };
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  const fetchProjects = async () => {
+    try {
+      const response = await fetch('http://localhost:8081/api/projects/active', {
+        cache: 'no-cache',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setProjects(data);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      // Retry after 2 seconds if it fails
+      setTimeout(() => {
+        if (projects.length === 0) {
+          fetchProjects();
+        }
+      }, 2000);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="container mx-auto px-4">
+      <Navbar />
+      <div className="hero grid md:grid-cols-2 items-center pt-10 xl:gap-0 gap-6 grid-cols-1">
   <div className="animate__animated animate__fadeInUp animate__delay-3s">
     <div className="flex items-center gap-3 mb-6 bg-zinc-800 w-fit p-4 rounded-2xl">
       <img src={DataImage.HeroImage} alt="Hero Image" className="w-10 rounded-full" loading="lazy"/>
@@ -81,7 +159,7 @@ function App() {
     <img src={tool.gambar} alt="Tools Image" className="w-14 bg-zinc-800 p-1 group-hover:bg-zinc-900" />
 
           <div>
-            <h4 className="font-bold">{tool.name}</h4>
+            <h4 className="font-bold">{tool.nama}</h4>
             <p className="opacity-50">{tool.ket}</p>
           </div>
           </div>
@@ -100,23 +178,32 @@ function App() {
     Here are some of the projects I have created.
   </p>
   <div className="proyek-box mt-14 grid lg:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-4">
-    {listProyek.map((proyek) => (
-      <div key={proyek.id} className="p-4 bg-zinc-800 rounded-md" data-aos="fade-up" data-aos-duration="1000" data-aos-delay={proyek.dad} data-aos-once="true">
-        <img src={proyek.gambar} alt="Proyek Image" loading="lazy"/>
-        <div>
-          <h1 className="text-2xl font-bold my-4">{proyek.nama}</h1>
-          <p className="text-base/loose mb-4">{proyek.desk}</p>
-          <div className="flex flex-wrap gap-2">
-            {proyek.tools.map((tool, index) => (
-            <p className="py-1 px-3 border border-zinc-500 bg-zinc-600 rounded-md font-semibold" key={index}>{tool}</p>
-            ))}
+    {loading ? (
+      <div className="col-span-full text-center text-zinc-400">Loading projects...</div>
+    ) : projects.length === 0 ? (
+      <div className="col-span-full text-center text-zinc-400">No projects available</div>
+    ) : (
+      projects.map((project, index) => {
+        const tools = parseTools(project.tools);
+        return (
+          <div key={project.id} className="p-4 bg-zinc-800 rounded-md" data-aos="fade-up" data-aos-duration="1000" data-aos-delay={index * 100} data-aos-once="true">
+            {project.imageUrl && <img src={project.imageUrl} alt="Project Image" loading="lazy" className="w-full h-48 object-cover rounded-lg mb-4"/>}
+            <div>
+              <h1 className="text-2xl font-bold my-4">{project.name}</h1>
+              <p className="text-base/loose mb-4">{project.description}</p>
+              <div className="flex flex-wrap gap-2">
+                {tools.map((tool, toolIndex) => (
+                <p className="py-1 px-3 border border-zinc-500 bg-zinc-600 rounded-md font-semibold" key={toolIndex}>{tool}</p>
+                ))}
+              </div>
+              <div className="mt-8 text-center">
+                <a href={project.websiteUrl || "#"} className="bg-violet-700 p-3 rounded-lg block border border-zinc-600 hover:bg-violet-600" >View Website</a>
+              </div>
+            </div>
           </div>
-          <div className="mt-8 text-center">
-            <a href="#" className="bg-violet-700 p-3 rounded-lg block border border-zinc-600 hover:bg-violet-600" >View Website</a>
-          </div>
-        </div>
-      </div>
-    ))}
+        );
+      })
+    )}
   </div>
 </div>
 
@@ -278,7 +365,8 @@ function App() {
 {/* Contact Section End */}
 
     {/* Kontak */}
-    </>
+      <Footer />
+    </div>
   );
 }
 

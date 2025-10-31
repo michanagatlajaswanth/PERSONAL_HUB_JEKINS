@@ -7,6 +7,9 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
+
 @Service
 public class ContactService {
 
@@ -37,5 +40,17 @@ public class ContactService {
         }
 
         return savedContact;
+    }
+
+    public List<Contact> getAllContacts() {
+        return contactRepository.findAll();
+    }
+
+    public Optional<Contact> getContactById(Long id) {
+        return contactRepository.findById(id);
+    }
+
+    public void deleteContact(Long id) {
+        contactRepository.deleteById(id);
     }
 }
