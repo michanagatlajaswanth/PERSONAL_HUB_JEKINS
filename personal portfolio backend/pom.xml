@@ -56,10 +56,13 @@
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
+
+        <!-- Tomcat -->
         <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-mail</artifactId>
-		</dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-tomcat</artifactId>
+            <scope>provided</scope>
+        </dependency>
 
         <!-- Test -->
         <dependency>
@@ -70,6 +73,7 @@
     </dependencies>
 
     <build>
+        <finalName>portfolio-backend</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
